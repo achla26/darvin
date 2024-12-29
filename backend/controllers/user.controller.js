@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { createUser , signIn ,blackListToken} from "../services/user.service.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import redisClient from '../services/redis.service.js';
 
 export const registerUser = asyncHandler(async (req, res, next) => {
     // Validate request body
