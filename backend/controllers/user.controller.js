@@ -44,6 +44,9 @@ export const loginUser = asyncHandler(async ( req, res) => {
 
     const token = loggedInUser.generateAuthToken();
 
+
+    delete loggedInUser._doc.password;
+
     res.cookie('token', token);
 
     // const options = {
