@@ -1,8 +1,10 @@
 import React ,{ useState } from 'react';
 import { Link , useNavigate } from 'react-router-dom';
 import axios from "../config/axios";
+import { useUser } from '../context/user.context'; 
 
 const Register = () => {
+  const { login } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] =   useState('');
   const navigate = useNavigate();
@@ -12,8 +14,9 @@ const Register = () => {
     
     try {
       const response = await axios.post('/users/register', { email, password });
-      navigate('/');
-      console.log(response.data);
+      localStorage.setItem('token',token);
+      await login(user);
+      navigate('/'); 
     } catch (error) {
       console.error(error.response.data);
     }
