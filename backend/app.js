@@ -1,7 +1,8 @@
 import  express  from "express"; 
 import cors from "cors";
 import connectDB from "./db/index.js";
-import userRouter from './routes/user.route.js'
+import userRouter from './routes/user.route.js';
+import projectRouter from './routes/project.router.js';
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -18,7 +19,8 @@ app.use(express.static("public"))
 
 
 // routes declaration
-app.use("/api/v1/users" , userRouter)
+app.use("/api/v1/users" , userRouter);
+app.use("/api/v1/projects" , projectRouter);
 
 app.get("/" , (req , res)=>{
     res.send("hello")
