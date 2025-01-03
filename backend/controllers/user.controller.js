@@ -1,7 +1,7 @@
 import { validationResult } from "express-validator";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { createUser , signIn ,blackListToken} from "../services/user.service.js";
+import { createUser , signIn ,blackListToken , getAllUsersService} from "../services/user.service.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import redisClient from '../services/redis.service.js';
 
@@ -69,11 +69,12 @@ export const loginUser = asyncHandler(async ( req, res) => {
 })
 
 export const getUserProfile = asyncHandler(async(req, res) => {
+
     return res
     .status(200)
     .json(new ApiResponse(
         200,
-        req.user,
+        allUsers,
         "User fetched successfully"
     ))
 })
@@ -90,5 +91,20 @@ export const logoutUser = asyncHandler(async(req, res) => {
     .json(new ApiResponse(
         200, 
         "User Logged Out successfully"
+    ))
+});
+
+export const getAllUsers = asyncHandler(async(req, res) => {
+    const userId = req.user?._id;
+    if(!userId){
+        throw new ApiError(401, "Unauthorized: User ID not found.");
+    }
+    const allUsers = await getAllUsersService(userId);     
+
+    return res
+    .status(200)
+    .json(new ApiResponse(
+        200, allUsers,
+        "All Users fetched successfully"
     ))
 })

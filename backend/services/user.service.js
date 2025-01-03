@@ -68,3 +68,17 @@ export const blackListToken = async (token) => {
         { upsert: true, new: true } // Create if it doesn't exist
     );
 };
+
+export const getAllUsersService = async (userId) => {
+    try { 
+        const users = await User.find({
+            _id: { $ne: userId }
+        }).select("-password -refreshToken");
+        if (!users) {
+            throw new ApiError(500, "Error while fetching users.");
+        }
+        return users;
+    } catch (error) {
+        throw error;
+    }
+}
