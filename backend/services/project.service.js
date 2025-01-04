@@ -112,3 +112,20 @@ export const addNewUserToProject = async (projectId, users , userId) => {
         throw error; // Pass error to the calling function
     }
 };
+
+export const getProjectByIdSercive = async (projectId) => {
+
+    if (!projectId) {
+        throw new Error("projectId is required")
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+        throw new Error("Invalid projectId")
+    }
+
+    const project = await Project.findOne({
+        _id: projectId
+    }).populate('users')
+
+    return project;
+}

@@ -1,7 +1,7 @@
 import { validationResult } from "express-validator";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { addProject , getProjectsByUserId , updateProjectById , addNewUserToProject}  from "../services/project.service.js";
+import { addProject , getProjectsByUserId , updateProjectById , addNewUserToProject , getProjectByIdSercive}  from "../services/project.service.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 export const createProject = asyncHandler(async (req, res, next) => {
@@ -89,3 +89,20 @@ export const addUserToProject = asyncHandler(async (req, res, next) => {
         new ApiResponse(200, { project }, "User added to project successfully.")
     );
 });
+
+export const getProjectById = asyncHandler(async (req, res, next) => {  
+    const { projectId } = req.params;
+    const userId = req.user?._id;
+
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized: User ID not found.");
+    } 
+
+    // Get the project by ID using the service
+    const project = await getProjectByIdSercive(projectId, userId);
+
+    // Send response
+    return res.status(200).json(
+        new ApiResponse(200, { project }, "Project retrieved successfully.")
+    );
+}); 
