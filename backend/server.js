@@ -9,7 +9,11 @@ const port = process.env.PORT || 3000;
 
 const server = http.createServer(app);
 
-const io = new Server(server);
+const io = new Server(server,{
+    cors : {
+        origin : "*"
+    }
+});
 
 io.use((socket , next) => {
     try{
@@ -22,6 +26,7 @@ io.use((socket , next) => {
         if(!decoded) next(new Error('Authentication Error'));
         
         socket.userId = decoded.id;
+        next();
     }catch(err){
         next(err);
     }
