@@ -1,4 +1,4 @@
-import socket from 'socket.io-client';
+import { io } from 'socket.io-client';
 
 
 let socketInstance = null;
@@ -6,10 +6,13 @@ let socketInstance = null;
 
 export const initializeSocket = (projectId) => {
 
-    socketInstance = socket(import.meta.env.VITE_REACT_APP_SOCKET_URL, {
+    socketInstance = io(import.meta.env.VITE_REACT_APP_SOCKET_URL, {
         auth: {
             token: localStorage.getItem('token')
         }, 
+        query:{
+            projectId
+        }
     });
 
     return socketInstance;

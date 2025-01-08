@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "../config/axios";
-import { initializeSocket } from "../config/socket";
+import { initializeSocket , sendMessage , receiveMessage } from "../config/socket";
+import { useUser } from "../context/user.context";
 const Project = () => {
   const location = useLocation();
 
@@ -10,7 +11,7 @@ const Project = () => {
   const [selectedUserId, setSelectedUserId] = useState(new Set()); // Initialized as Set
   const [project, setProject] = useState(location.state.project);
   const [message, setMessage] = useState("");
-  const messageBox = React.createRef();
+  const messageBox = useRef(null); // Initialize the ref
 
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]); // New state variable for messages
@@ -23,6 +24,8 @@ const Project = () => {
   const [iframeUrl, setIframeUrl] = useState(null);
 
   const [runProcess, setRunProcess] = useState(null);
+
+  const { user } = useUser();
 
   const handleUserClick = (id) => {
     setSelectedUserId((prevSelectedUserId) => {
@@ -68,31 +71,39 @@ const Project = () => {
       .catch((err) => {
         console.log(err);
       });
-  }
-
-  
+  }  
 
   useEffect(() => {
-    initializeSocket();
+    initializeSocket(project._id);
     allUsers();
     getProjectUsers();
+
+    receiveMessage("project-message", (data) => {
+      setMessages((prevMessages) => [...prevMessages, data]); // Update messages state
+      console.log(data);
+    });
   } , [])
 
-  const send = () => {
+  const send = (e) => {
+    e.preventDefault();
+
+    scrollToBottom();
+
     sendMessage("project-message", {
       message,
-      sender: user,
+      sender: user._id,
     });
     setMessages((prevMessages) => [...prevMessages, { sender: user, message }]); // Update messages state
-    setMessage("");
+    setMessage(""); 
+
   };
- 
-
-  // Removed appendIncomingMessage and appendOutgoingMessage functions
-
-  function scrollToBottom() {
-    messageBox.current.scrollTop = messageBox.current.scrollHeight;
+  
+  function scrollToBottom() { 
+    if (messageBox.current) {
+      messageBox.current.scrollTop = messageBox.current.scrollHeight;
+    }
   }
+ 
 
   return (
     <main className="h-screen w-screen flex">
@@ -117,10 +128,10 @@ const Project = () => {
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`${
+                className={`break-words ${
                   msg.sender._id === "ai" ? "max-w-80" : "max-w-52"
                 } ${
-                  msg.sender._id == user._id.toString() && "ml-auto"
+                  msg.sender._id == user._id && "ml-auto"
                 }  message flex flex-col p-2 bg-slate-50 w-fit rounded-md`}
               >
                 <small className="opacity-65 text-xs">{msg.sender.email}</small>
@@ -143,7 +154,7 @@ const Project = () => {
               type="text"
               placeholder="Enter message"
             />
-            <button onClick={send} className="px-5 bg-slate-950 text-white">
+            <button onClick={send} type="button" className="px-5 bg-slate-950 text-white">
               <i className="ri-send-plane-fill"></i>
             </button>
           </div>
