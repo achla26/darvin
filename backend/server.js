@@ -51,7 +51,12 @@ io.on("connection" , (socket) =>{
     socket.on("project-message" , (data)=>{
         console.log(data); 
         socket.broadcast.to(socket.roomId).emit("project-message" , data);
-    })
+    });
+
+    socket.on("disconnect" , ()=>{
+        socket.leave(socket.roomId);
+        console.log("a user disconnected");
+    });
 })
 
 server.listen(port , ()=>{

@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "../config/axios";
-import { initializeSocket , sendMessage , receiveMessage } from "../config/socket";
+import {
+  initializeSocket,
+  sendMessage,
+  receiveMessage,
+} from "../config/socket";
 import { useUser } from "../context/user.context";
 const Project = () => {
   const location = useLocation();
@@ -35,14 +39,14 @@ const Project = () => {
       } else {
         newSelectedUserId.add(id);
       }
-      
+
       return newSelectedUserId;
     });
   };
 
   const allUsers = async () => {
     try {
-      const response = await axios.get("/users/all"); 
+      const response = await axios.get("/users/all");
       setUsers(response.data.data);
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
@@ -50,13 +54,15 @@ const Project = () => {
   };
 
   const getProjectUsers = async () => {
-    try{
-      const response = await axios.get(`/projects/${location.state.project._id}`);
+    try {
+      const response = await axios.get(
+        `/projects/${location.state.project._id}`
+      );
       setProject(response.data.project);
-    }catch(err){
+    } catch (err) {
       console.log(err);
     }
-  }
+  };
 
   function addCollaborators() {
     axios
@@ -71,7 +77,7 @@ const Project = () => {
       .catch((err) => {
         console.log(err);
       });
-  }  
+  }
 
   useEffect(() => {
     initializeSocket(project._id);
@@ -82,28 +88,35 @@ const Project = () => {
       setMessages((prevMessages) => [...prevMessages, data]); // Update messages state
       console.log(data);
     });
-  } , [])
+  }, []);
 
   const send = (e) => {
     e.preventDefault();
 
-    scrollToBottom();
+    if (message.length > 0) {
+      scrollToBottom();
 
-    sendMessage("project-message", {
-      message,
-      sender: user._id,
-    });
-    setMessages((prevMessages) => [...prevMessages, { sender: user, message }]); // Update messages state
-    setMessage(""); 
-
+      sendMessage("project-message", {
+        message,
+        sender: user._id,
+      });
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { sender: user, message },
+      ]); // Update messages state
+      setMessage("");
+    }
   };
-  
-  function scrollToBottom() { 
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  function scrollToBottom() {
     if (messageBox.current) {
       messageBox.current.scrollTop = messageBox.current.scrollHeight;
     }
   }
- 
 
   return (
     <main className="h-screen w-screen flex">
@@ -154,7 +167,11 @@ const Project = () => {
               type="text"
               placeholder="Enter message"
             />
-            <button onClick={send} type="button" className="px-5 bg-slate-950 text-white">
+            <button
+              onClick={send}
+              type="button"
+              className="px-5 bg-slate-950 text-white"
+            >
               <i className="ri-send-plane-fill"></i>
             </button>
           </div>
@@ -176,9 +193,12 @@ const Project = () => {
           </header>
           <div className="users flex flex-col gap-2">
             {project.users &&
-              project.users.map((user ,index) => {
+              project.users.map((user, index) => {
                 return (
-                  <div className="user cursor-pointer hover:bg-slate-200 p-2 flex gap-2 items-center" key={index} >
+                  <div
+                    className="user cursor-pointer hover:bg-slate-200 p-2 flex gap-2 items-center"
+                    key={index}
+                  >
                     <div className="aspect-square rounded-full w-fit h-fit flex items-center justify-center p-5 text-white bg-slate-600">
                       <i className="ri-user-fill absolute"></i>
                     </div>
