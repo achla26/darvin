@@ -7,6 +7,8 @@ import {
   receiveMessage,
 } from "../config/socket";
 import { useUser } from "../context/user.context";
+import Markdown from "markdown-to-jsx";
+
 const Project = () => {
   const location = useLocation();
 
@@ -85,8 +87,9 @@ const Project = () => {
     getProjectUsers();
 
     receiveMessage("project-message", (data) => {
+
       setMessages((prevMessages) => [...prevMessages, data]); // Update messages state
-      console.log(data);
+      console.log(data); 
     });
   }, []);
 
@@ -100,6 +103,7 @@ const Project = () => {
         message,
         sender: user._id,
       });
+      
       setMessages((prevMessages) => [
         ...prevMessages,
         { sender: user, message },
@@ -148,12 +152,12 @@ const Project = () => {
                 }  message flex flex-col p-2 bg-slate-50 w-fit rounded-md`}
               >
                 <small className="opacity-65 text-xs">{msg.sender.email}</small>
-                <div className="text-sm">
+                <div className={`text-sm overflow-x-auto   ${msg.sender._id === "ai" ? "bg-slate-950 text-white rounded-sm p-2" : ""}`}>
                   {msg.sender._id === "ai" ? (
-                    WriteAiMessage(msg.message)
+                    <Markdown>{msg.message}</Markdown>
                   ) : (
                     <p>{msg.message}</p>
-                  )}
+                  )} 
                 </div>
               </div>
             ))}
