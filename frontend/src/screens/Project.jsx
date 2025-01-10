@@ -8,6 +8,7 @@ import {
 } from "../config/socket";
 import { useUser } from "../context/user.context";
 import Markdown from "markdown-to-jsx";
+import hljs from "highlight.js";
 
 const Project = () => {
   const location = useLocation();
@@ -16,7 +17,7 @@ const Project = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(new Set()); // Initialized as Set
   const [project, setProject] = useState(location.state.project);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("@ai create express server");
   const messageBox = useRef(null); // Initialize the ref
 
   const [users, setUsers] = useState([]);
@@ -86,10 +87,13 @@ const Project = () => {
     allUsers();
     getProjectUsers();
 
-    receiveMessage("project-message", (data) => {
-
+    receiveMessage("project-message", (data) => { 
+      const messageObject = JSON.parse(data.message);
+      if(messageObject.fileTree) { 
+        setFileTree(messageObject.fileTree || {});
+      }
       setMessages((prevMessages) => [...prevMessages, data]); // Update messages state
-      console.log(data); 
+      console.log(data);
     });
   }, []);
 
@@ -103,7 +107,7 @@ const Project = () => {
         message,
         sender: user._id,
       });
-      
+
       setMessages((prevMessages) => [
         ...prevMessages,
         { sender: user, message },
@@ -120,6 +124,23 @@ const Project = () => {
     if (messageBox.current) {
       messageBox.current.scrollTop = messageBox.current.scrollHeight;
     }
+  }
+
+  function WriteAiMessage(message) {
+    const messageObject = JSON.parse(message);
+     
+    return (
+      <div className="overflow-auto bg-slate-950 text-white rounded-sm p-2">
+        <Markdown
+          children={messageObject.text}
+          // options={{
+          //   overrides: {
+          //     code: SyntaxHighlightedCode,
+          //   },
+          // }}
+        />
+      </div>
+    );
   }
 
   return (
@@ -152,12 +173,12 @@ const Project = () => {
                 }  message flex flex-col p-2 bg-slate-50 w-fit rounded-md`}
               >
                 <small className="opacity-65 text-xs">{msg.sender.email}</small>
-                <div className={`text-sm overflow-x-auto   ${msg.sender._id === "ai" ? "bg-slate-950 text-white rounded-sm p-2" : ""}`}>
-                  {msg.sender._id === "ai" ? (
-                    <Markdown>{msg.message}</Markdown>
+                <div className="text-sm overflow-x-auto">
+                  {msg.sender._id === "ai" ? ( 
+                    WriteAiMessage(msg.message)
                   ) : (
                     <p>{msg.message}</p>
-                  )} 
+                  )}
                 </div>
               </div>
             ))}
@@ -248,104 +269,29 @@ const Project = () => {
               ))}
             </div>
 
-            <div className="actions flex gap-2">
-              <button
-                onClick={async () => {
-                  await webContainer.mount(fileTree);
-
-                  const installProcess = await webContainer.spawn("npm", [
-                    "install",
-                  ]);
-
-                  installProcess.output.pipeTo(
-                    new WritableStream({
-                      write(chunk) {
-                        console.log(chunk);
-                      },
-                    })
-                  );
-
-                  if (runProcess) {
-                    runProcess.kill();
-                  }
-
-                  let tempRunProcess = await webContainer.spawn("npm", [
-                    "start",
-                  ]);
-
-                  tempRunProcess.output.pipeTo(
-                    new WritableStream({
-                      write(chunk) {
-                        console.log(chunk);
-                      },
-                    })
-                  );
-
-                  setRunProcess(tempRunProcess);
-
-                  webContainer.on("server-ready", (port, url) => {
-                    console.log(port, url);
-                    setIframeUrl(url);
-                  });
-                }}
-                className="p-2 px-4 bg-slate-300 text-white"
-              >
-                run
-              </button>
-            </div>
+           
           </div>
           <div className="bottom flex flex-grow max-w-full shrink overflow-auto">
             {fileTree[currentFile] && (
-              <div className="code-editor-area h-full overflow-auto flex-grow bg-slate-50">
-                <pre className="hljs h-full">
-                  <code
-                    className="hljs h-full outline-none"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => {
-                      const updatedContent = e.target.innerText;
-                      const ft = {
-                        ...fileTree,
-                        [currentFile]: {
-                          file: {
-                            contents: updatedContent,
-                          },
+              <div className="code-editor-area  h-full overflow-auto flex-grow bg-slate-50">
+                <textarea 
+                  value={fileTree[currentFile].file.contents}
+                  onChange = {(e) => { 
+                    setFileTree({
+                      ...fileTree,
+                      [currentFile]: {
+                        file: {
+                          contents: e.target.value,
                         },
-                      };
-                      setFileTree(ft);
-                      saveFileTree(ft);
-                    }}
-                    dangerouslySetInnerHTML={{
-                      __html: hljs.highlight(
-                        "javascript",
-                        fileTree[currentFile].file.contents
-                      ).value,
-                    }}
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      paddingBottom: "25rem",
-                      counterSet: "line-numbering",
-                    }}
-                  />
-                </pre>
+                      },
+                    });
+                  }}
+                ></textarea>
               </div>
             )}
           </div>
         </div>
-
-        {iframeUrl && webContainer && (
-          <div className="flex min-w-96 flex-col h-full">
-            <div className="address-bar">
-              <input
-                type="text"
-                onChange={(e) => setIframeUrl(e.target.value)}
-                value={iframeUrl}
-                className="w-full p-2 px-4 bg-slate-200"
-              />
-            </div>
-            <iframe src={iframeUrl} className="w-full h-full"></iframe>
-          </div>
-        )}
+ 
       </section>
 
       {isModalOpen && (
