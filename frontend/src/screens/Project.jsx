@@ -8,7 +8,10 @@ import {
 } from "../config/socket";
 import { useUser } from "../context/user.context";
 import Markdown from "markdown-to-jsx";
-import hljs from "highlight.js";
+import hljs from "highlight.js"; 
+import "highlight.js/styles/atom-one-dark.css";
+// import "highlight.js/styles/atom-one-light.css";
+
 
 const Project = () => {
   const location = useLocation();
@@ -143,6 +146,18 @@ const Project = () => {
     );
   }
 
+ 
+  useEffect(() => {
+    if (currentFile && fileTree[currentFile]) {
+      const codeEditor = document.getElementById("code-editor");
+      if (codeEditor) {
+        delete codeEditor.dataset.highlighted;
+        hljs.highlightElement(codeEditor);
+      }
+    }
+  }, [currentFile, fileTree]);
+  
+
   return (
     <main className="h-screen w-screen flex">
       <section className="left relative flex flex-col h-screen min-w-96 bg-slate-300">
@@ -274,19 +289,26 @@ const Project = () => {
           <div className="bottom flex flex-grow max-w-full shrink overflow-auto">
             {fileTree[currentFile] && (
               <div className="code-editor-area  h-full overflow-auto flex-grow bg-slate-50">
-                <textarea 
-                  value={fileTree[currentFile].file.contents}
-                  onChange = {(e) => { 
-                    setFileTree({
-                      ...fileTree,
-                      [currentFile]: {
-                        file: {
-                          contents: e.target.value,
+                <pre>
+                  <code
+                    id="code-editor"
+                    className="hljs hljs-dark"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onInput={(e) => {
+                      setFileTree({
+                        ...fileTree,
+                        [currentFile]: {
+                          file: {
+                            contents: e.target.innerText,
+                          },
                         },
-                      },
-                    });
-                  }}
-                ></textarea>
+                      });
+                    }}
+                  >
+                    {fileTree[currentFile].file.contents}
+                  </code>
+                </pre>
               </div>
             )}
           </div>
